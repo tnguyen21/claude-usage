@@ -70,12 +70,13 @@ type model struct {
 	opusBar    progress.Model
 	spinner    spinner.Model
 
-	loading  bool
-	width    int
-	height   int
-	token    string
-	subType  string
+	loading     bool
+	width       int
+	height      int
+	token       string
+	subType     string
 	lastRefresh time.Time // debounce
+	hoverBar    int       // -1 = none, 0 = session, 1 = weekly, 2 = opus
 }
 
 func newModel(token, subType string) model {
@@ -93,6 +94,7 @@ func newModel(token, subType string) model {
 		loading:    true,
 		token:      token,
 		subType:    subType,
+		hoverBar:   -1,
 	}
 }
 
@@ -189,6 +191,26 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.spinner, cmd = m.spinner.Update(msg)
 		return m, cmd
 
+	case tea.MouseMsg:
+		// border(1) + padding(1) + title(1) + blank(1) = 4 lines before first bar
+		// each bar section: bar line, reset line, blank line = 3 lines
+		y := msg.Y
+		barStart := 4 // first bar line Y
+		old := m.hoverBar
+		m.hoverBar = -1
+		for i := 0; i < 3; i++ {
+			rowTop := barStart + i*3
+			rowBot := rowTop + 1 // bar line + reset line
+			if y >= rowTop && y <= rowBot {
+				m.hoverBar = i
+				break
+			}
+		}
+		if m.hoverBar != old {
+			return m, nil
+		}
+		return m, nil
+
 	case progress.FrameMsg:
 		var cmds []tea.Cmd
 		var cmd tea.Cmd
@@ -236,17 +258,17 @@ func (m model) View() string {
 	}
 
 	if m.usage != nil {
-		// session bar
+		barIdx := 0
 		if m.usage.FiveHour != nil {
-			b.WriteString(renderBar("Session (5h)", m.sessionBar, m.usage.FiveHour))
+			b.WriteString(renderBar("Session (5h)", m.sessionBar, m.usage.FiveHour, m.hoverBar == barIdx))
+			barIdx++
 		}
-		// weekly bar
 		if m.usage.SevenDay != nil {
-			b.WriteString(renderBar("Weekly (7d)", m.weeklyBar, m.usage.SevenDay))
+			b.WriteString(renderBar("Weekly (7d)", m.weeklyBar, m.usage.SevenDay, m.hoverBar == barIdx))
+			barIdx++
 		}
-		// opus bar
 		if m.usage.SevenDayOpus != nil {
-			b.WriteString(renderBar("Opus (7d)", m.opusBar, m.usage.SevenDayOpus))
+			b.WriteString(renderBar("Opus (7d)", m.opusBar, m.usage.SevenDayOpus, m.hoverBar == barIdx))
 		}
 	}
 
@@ -273,9 +295,20 @@ func (m model) View() string {
 	return borderStyle.Render(b.String())
 }
 
-func renderBar(label string, bar progress.Model, bucket *UsageBucket) string {
+var hoverPercentStyle = lipgloss.NewStyle().
+	Width(8).
+	Align(lipgloss.Right).
+	Bold(true).
+	Foreground(lipgloss.Color("255"))
+
+func renderBar(label string, bar progress.Model, bucket *UsageBucket, hover bool) string {
 	pct := bucket.Utilization
-	pctStr := percentStyle.Render(fmt.Sprintf("%.0f%%", pct))
+	var pctStr string
+	if hover {
+		pctStr = hoverPercentStyle.Render(fmt.Sprintf("%.2f%%", pct))
+	} else {
+		pctStr = percentStyle.Render(fmt.Sprintf("%.0f%%", pct))
+	}
 	line := labelStyle.Render(label) + bar.View() + " " + pctStr + "\n"
 
 	resetLine := ""
