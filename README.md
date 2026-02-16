@@ -4,6 +4,8 @@ TUI for tracking your Claude rate limit usage. Built with [Charm](https://charm.
 
 ![Go](https://img.shields.io/badge/Go-1.23-blue)
 
+![demo](demo.gif)
+
 ## Install
 
 ```bash
