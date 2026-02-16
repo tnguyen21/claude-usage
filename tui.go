@@ -285,18 +285,31 @@ func (m model) View() string {
 	var b strings.Builder
 
 	// title row
+	cw := m.contentWidth()
 	title := titleStyle.Render("claude-usage")
-	right := ""
 	if m.loading {
-		right = m.spinner.View()
+		title += "  " + m.spinner.View()
 	} else if m.stale {
-		right = staleStyle.Render("stale")
+		title += "  " + staleStyle.Render("stale")
 	}
-	titleRow := title
+
+	// right side: subscription type + last updated
+	right := ""
+	if m.subType != "" {
+		right += strings.ToUpper(m.subType[:1]) + m.subType[1:]
+	}
+	if !m.lastFetch.IsZero() {
+		if right != "" {
+			right += " • "
+		}
+		right += m.lastFetch.Format("15:04")
+	}
 	if right != "" {
-		titleRow += "  " + right
+		titleRow := title + footerStyle.Render(strings.Repeat(" ", max(1, cw-lipgloss.Width(title)-lipgloss.Width(right)))+right)
+		b.WriteString(titleRow + "\n\n")
+	} else {
+		b.WriteString(title + "\n\n")
 	}
-	b.WriteString(titleRow + "\n\n")
 
 	// error only (no data yet)
 	if m.err != nil && m.usage == nil {
@@ -340,21 +353,6 @@ func (m model) View() string {
 	// stale error
 	if m.stale && m.err != nil {
 		b.WriteString(staleStyle.Render("  "+m.err.Error()) + "\n\n")
-	}
-
-	// footer
-	footer := ""
-	if m.subType != "" {
-		footer += strings.ToUpper(m.subType[:1]) + m.subType[1:]
-	}
-	if !m.lastFetch.IsZero() {
-		if footer != "" {
-			footer += "  •  "
-		}
-		footer += "updated " + m.lastFetch.Format("15:04")
-	}
-	if footer != "" {
-		b.WriteString(footerStyle.Render(footer))
 	}
 
 	return m.borderStyle().Render(b.String())
