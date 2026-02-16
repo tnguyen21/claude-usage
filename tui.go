@@ -187,7 +187,7 @@ func (m *model) resizeBars() {
 	cw := m.contentWidth()
 	// bar = content - label - " " - percent(6)
 	barWidth := cw - m.labelWidth() - 7
-	barWidth = max(8, min(barWidth, 40))
+	barWidth = max(8, min(barWidth, 20))
 	m.sessionBar.Width = barWidth
 	m.weeklyBar.Width = barWidth
 	m.opusBar.Width = barWidth
@@ -346,6 +346,7 @@ func (m model) View() string {
 
 	// token counts
 	if m.tokensToday.Total() > 0 || m.tokens7d.Total() > 0 {
+		b.WriteString("\n")
 		b.WriteString(m.renderTokenSection())
 	}
 
