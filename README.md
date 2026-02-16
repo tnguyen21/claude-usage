@@ -1,6 +1,6 @@
-# claude-usage
+# llm-usage
 
-TUI for tracking your Claude rate limit usage. Built with [Charm](https://charm.sh).
+TUI for tracking your Claude and Codex rate limit usage. Built with [Charm](https://charm.sh).
 
 ![Go](https://img.shields.io/badge/Go-1.23-blue)
 
@@ -9,21 +9,21 @@ TUI for tracking your Claude rate limit usage. Built with [Charm](https://charm.
 ## Install
 
 ```bash
-go install github.com/tnguyen21/claude-usage@latest
+go install github.com/tau/llm-usage@latest
 ```
 
 Or build from source:
 
 ```bash
-git clone git@github.com:tnguyen21/claude-usage.git
-cd claude-usage
+git clone git@github.com:tau/llm-usage.git
+cd llm-usage
 go install .
 ```
 
 ## Usage
 
 ```bash
-claude-usage
+llm-usage
 ```
 
 That's it. It reads your OAuth token from the macOS Keychain automatically (requires being logged into [Claude Code](https://docs.anthropic.com/en/docs/claude-code)).
@@ -33,13 +33,13 @@ That's it. It reads your OAuth token from the macOS Keychain automatically (requ
 For tmux statusbars or scripts:
 
 ```bash
-claude-usage --compact
+llm-usage --compact
 # 5h:45% 7d:29%
 ```
 
 ```bash
 # tmux example
-set -g status-right '#(claude-usage --compact)'
+set -g status-right '#(llm-usage --compact)'
 ```
 
 ### Environment variable
@@ -48,7 +48,7 @@ On Linux or if you want to use a specific token:
 
 ```bash
 export CLAUDE_OAUTH_TOKEN="sk-ant-oat01-..."
-claude-usage
+llm-usage
 ```
 
 ## Keybindings

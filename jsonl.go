@@ -20,7 +20,7 @@ func (t TokenStats) Total() int {
 	return t.InputTokens + t.OutputTokens + t.CacheCreation + t.CacheRead
 }
 
-func claudeDataDirs() []string {
+func claudeSessionDirs() []string {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil
@@ -40,7 +40,7 @@ func claudeDataDirs() []string {
 
 func scanClaudeTokens(since time.Time) (TokenStats, error) {
 	var stats TokenStats
-	dirs := claudeDataDirs()
+	dirs := claudeSessionDirs()
 	if len(dirs) == 0 {
 		return stats, nil
 	}
@@ -60,7 +60,7 @@ func scanClaudeTokens(since time.Time) (TokenStats, error) {
 			if info, err := d.Info(); err == nil && info.ModTime().Before(since) {
 				return nil
 			}
-			scanFile(path, since, &stats)
+			scanClaudeFileTokens(path, since, &stats)
 			return nil
 		})
 		if err != nil {
@@ -88,7 +88,7 @@ func scanAllTokens(since time.Time) (TokenStats, error) {
 	}, nil
 }
 
-func scanFile(path string, since time.Time, stats *TokenStats) {
+func scanClaudeFileTokens(path string, since time.Time, stats *TokenStats) {
 	f, err := os.Open(path)
 	if err != nil {
 		return
