@@ -395,7 +395,8 @@ func (m model) renderTokenSection() string {
 
 	renderRow := func(label string, stats TokenStats) string {
 		labelStr := lipgloss.NewStyle().Width(lw).Foreground(labelColor).Render(label)
-		in := valStyle.Render(formatTokenCount(stats.InputTokens))
+		totalIn := stats.InputTokens + stats.CacheCreation + stats.CacheRead
+		in := valStyle.Render(formatTokenCount(totalIn))
 		out := valStyle.Render(formatTokenCount(stats.OutputTokens))
 		inLabel := dimStyle.Render(" in  ")
 		outLabel := dimStyle.Render(" out")
