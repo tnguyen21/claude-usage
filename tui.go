@@ -430,7 +430,7 @@ func (m model) View() string {
 			b.WriteString(m.renderBar(label, m.codexSessionBar, bucket, lw))
 		}
 		if m.codexUsage.Secondary != nil {
-			label := "Weekly"
+			label := "Weekly (7d)"
 			if narrow {
 				label = "7d"
 			}
