@@ -207,11 +207,11 @@ func fetchTokensCmd() tea.Cmd {
 	return func() tea.Msg {
 		now := time.Now()
 		startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-		today, err := scanTokens(startOfDay)
+		today, err := scanAllTokens(startOfDay)
 		if err != nil {
 			return tokensFetchedMsg{err: err}
 		}
-		week, err := scanTokens(now.AddDate(0, 0, -7))
+		week, err := scanAllTokens(now.AddDate(0, 0, -7))
 		if err != nil {
 			return tokensFetchedMsg{today: today, err: err}
 		}

@@ -38,11 +38,11 @@ func claudeDataDirs() []string {
 	return dirs
 }
 
-func scanTokens(since time.Time) (TokenStats, error) {
+func scanClaudeTokens(since time.Time) (TokenStats, error) {
 	var stats TokenStats
 	dirs := claudeDataDirs()
 	if len(dirs) == 0 {
-		return stats, fmt.Errorf("no Claude data directories found")
+		return stats, nil
 	}
 
 	for _, root := range dirs {
@@ -68,6 +68,24 @@ func scanTokens(since time.Time) (TokenStats, error) {
 		}
 	}
 	return stats, nil
+}
+
+// scanAllTokens combines Claude + Codex token counts.
+func scanAllTokens(since time.Time) (TokenStats, error) {
+	claude, err := scanClaudeTokens(since)
+	if err != nil {
+		return claude, err
+	}
+	codex, err := scanCodexTokens(since)
+	if err != nil {
+		return claude, err
+	}
+	return TokenStats{
+		InputTokens:  claude.InputTokens + codex.InputTokens,
+		OutputTokens: claude.OutputTokens + codex.OutputTokens,
+		CacheCreation: claude.CacheCreation + codex.CacheCreation,
+		CacheRead:    claude.CacheRead + codex.CacheRead,
+	}, nil
 }
 
 func scanFile(path string, since time.Time, stats *TokenStats) {

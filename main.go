@@ -72,7 +72,7 @@ func runCompact() {
 
 	// Token total
 	now := time.Now()
-	week, err := scanTokens(now.AddDate(0, 0, -7))
+	week, err := scanAllTokens(now.AddDate(0, 0, -7))
 	if err == nil && week.Total() > 0 {
 		parts = append(parts, "tok:"+formatTokenCount(week.Total()))
 	}
