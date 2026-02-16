@@ -77,6 +77,15 @@ func scanFile(path string, since time.Time, stats *TokenStats) {
 	}
 	defer f.Close()
 
+	// Claude Code writes multiple JSONL entries per streamed message (same
+	// message ID, cumulative usage). We must deduplicate: keep only the last
+	// entry per message ID which holds the final token counts.
+	type usage struct {
+		in, out, cacheCreate, cacheRead int
+	}
+	seen := make(map[string]usage)  // message ID -> final usage
+	var anonymous []usage           // entries without a message ID
+
 	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 512*1024), 512*1024)
 	for scanner.Scan() {
@@ -101,10 +110,31 @@ func scanFile(path string, since time.Time, stats *TokenStats) {
 			continue
 		}
 
-		stats.InputTokens += entry.Message.Usage.InputTokens
-		stats.OutputTokens += entry.Message.Usage.OutputTokens
-		stats.CacheCreation += entry.Message.Usage.CacheCreationInputTokens
-		stats.CacheRead += entry.Message.Usage.CacheReadInputTokens
+		u := usage{
+			in:          entry.Message.Usage.InputTokens,
+			out:         entry.Message.Usage.OutputTokens,
+			cacheCreate: entry.Message.Usage.CacheCreationInputTokens,
+			cacheRead:   entry.Message.Usage.CacheReadInputTokens,
+		}
+
+		if entry.Message.ID != "" {
+			seen[entry.Message.ID] = u // last write wins
+		} else {
+			anonymous = append(anonymous, u)
+		}
+	}
+
+	for _, u := range seen {
+		stats.InputTokens += u.in
+		stats.OutputTokens += u.out
+		stats.CacheCreation += u.cacheCreate
+		stats.CacheRead += u.cacheRead
+	}
+	for _, u := range anonymous {
+		stats.InputTokens += u.in
+		stats.OutputTokens += u.out
+		stats.CacheCreation += u.cacheCreate
+		stats.CacheRead += u.cacheRead
 	}
 }
 

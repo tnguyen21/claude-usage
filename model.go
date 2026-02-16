@@ -19,6 +19,7 @@ type jsonlEntry struct {
 	Type      string `json:"type"`
 	Timestamp string `json:"timestamp"`
 	Message   *struct {
+		ID    string `json:"id"`
 		Usage *struct {
 			InputTokens              int `json:"input_tokens"`
 			OutputTokens             int `json:"output_tokens"`
